@@ -1,0 +1,25 @@
+class status_word_agent extends uvm_agent;
+  
+  status_word_driver    my_status_word_driver;
+  status_word_monitor   my_status_word_monitor;
+  status_word_sequencer status_word_sequencer_i;
+  
+  `uvm_component_utils(status_word_agent)
+  
+  function new(string name = "status_word_agent",uvm_component parent=null);
+    super.new(name,parent);
+  endfunction
+  
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    my_status_word_driver = status_word_driver::type_id::create("my_status_word_driver",this);
+    my_status_word_monitor = status_word_monitor::type_id::create("my_status_word_monitor",this);
+    status_word_sequencer_i = status_word_sequencer::type_id::create("status_word_sequencer_i",this);
+  endfunction
+  
+  virtual function void connect_phase(uvm_phase phase);
+    super.connect_phase(phase);
+    if(get_is_active())
+      my_status_word_driver.seq_item_port.connect(status_word_sequencer_i.seq_item_export);
+  endfunction
+endclass

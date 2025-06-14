@@ -1,0 +1,76 @@
+class pcm_monitor extends uvm_monitor;
+  
+   `uvm_component_utils(pcm_monitor)
+  
+    virtual pcm_if pcm_if_i;
+
+  uvm_analysis_port #(pcm_seq_item) item_collected_port_in;
+  uvm_analysis_port #(pcm_seq_item) item_collected_port_out;
+
+  pcm_seq_item trans_collected;
+  pcm_seq_item temp_trans_collected;
+   
+
+function new (string name="pcm_monitor", uvm_component parent);
+  super.new(name, parent);
+  item_collected_port_in = new("item_collected_port_in", this);
+  item_collected_port_out = new("item_collected_port_out", this);
+endfunction
+   
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    if(!uvm_config_db#(virtual pcm_if)::get(this, "", "pcm_if_i", pcm_if_i))
+      `uvm_fatal("NO_VIF",{"virtual interface must be set for: ",get_full_name(),"pcm_if_i"});
+  endfunction
+
+  task run_phase(uvm_phase phase);
+    temp_trans_collected = pcm_seq_item::type_id::create("temp_trans_collected", this);
+    trans_collected = pcm_seq_item::type_id::create("trans_collected", this);
+    
+    forever begin
+      @(negedge pcm_if_i.clk);
+      if (pcm_if_i.rstn != 0) begin
+          fork
+            data_in();
+          join_none
+      end
+    end
+    
+ endtask 
+
+  task data_in ();
+    wait(pcm_if_i.rstn == 1);
+    forever begin 
+      @(posedge pcm_if_i.clk)
+      
+      if(pcm_if_i.rx_valid && pcm_if_i.rx_ready) begin
+        trans_collected.rx_ch = pcm_if_i.rx_ch;
+        trans_collected.rx_data = pcm_if_i.rx_data;
+        `uvm_info(get_type_name(), "Item collected:", UVM_NONE)
+        trans_collected.print();
+        item_collected_port_in.write(trans_collected);
+
+      end
+    end
+  endtask
+  
+    task data_out();
+    forever @(posedge pcm_if_i.clk) begin 
+      @(negedge pcm_if_i.clk);
+      if (pcm_if_i.rstn == 0) begin
+        trans_collected.copy(temp_trans_collected);
+        @(posedge pcm_if_i.clk);
+        @(negedge pcm_if_i.clk);
+        trans_collected.rx_ch = pcm_if_i.rx_ch;
+        trans_collected.rx_data = pcm_if_i.rx_data;
+        `uvm_info(get_type_name(), "Item collected:", UVM_NONE)
+        trans_collected.print();
+        item_collected_port_out.write(trans_collected);
+      end
+    end
+  endtask
+   
+endclass 
+
+
+

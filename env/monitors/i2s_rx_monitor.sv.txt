@@ -1,0 +1,56 @@
+class i2s_rx_monitor extends uvm_monitor;
+  
+  `uvm_component_utils(i2s_rx_monitor)
+  
+
+    virtual i2s_rx_if i2s_rx_if_i;
+  integer cnt = 0;
+  
+  
+
+  uvm_analysis_port #(i2s_rx_seq_item) item_collected_port_in;
+
+  i2s_rx_seq_item temp_trans_collected;
+   
+
+  function new (string name="i2s_rx_monitor", uvm_component parent=null);
+    super.new(name, parent);
+    item_collected_port_in=new("item_collected_port_in",this);
+  endfunction
+
+   
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    if(!uvm_config_db#(virtual i2s_rx_if)::get(this, "", "i2s_rx_if_i", i2s_rx_if_i))
+      `uvm_fatal("NO_VIF",{"virtual interface must be set for: ",get_full_name(),".i2s_rx_if_i"});
+  endfunction
+ 
+   
+
+  task run_phase(uvm_phase phase);    
+    temp_trans_collected = i2s_rx_seq_item::type_id::create("temp_trans_collected", this);
+    wait (i2s_rx_if_i.rstn != 0)
+    forever begin
+      @(negedge i2s_rx_if_i.clk);
+      data_in(i2s_rx_if_i.ws_o, i2s_rx_if_i.sd_o, i2s_rx_if_i.sd_oe);
+    end    
+ endtask 
+  
+  task data_in (ws_o, sd_o, sd_oe);
+      forever @(posedge i2s_rx_if_i.clk) begin 
+      if (i2s_rx_if_i.rstn == 0) begin
+        if(sd_oe) begin
+        temp_trans_collected.ws_o = ws_o;
+        temp_trans_collected.sd_o[cnt] = sd_o;
+        cnt = cnt +1;
+          if(cnt == `DATA_WIDTH) begin
+          cnt = 0;
+      	  item_collected_port_in.write(temp_trans_collected);
+        end
+        end
+    end
+    end
+  endtask
+  
+   
+endclass

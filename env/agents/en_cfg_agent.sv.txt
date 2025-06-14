@@ -1,0 +1,25 @@
+class en_cfg_agent extends uvm_agent;
+  
+  en_cfg_driver my_en_cfg_driver;
+  en_cfg_monitor my_en_cfg_monitor;
+  en_cfg_sequencer en_cfg_sequencer_i;
+  
+  `uvm_component_utils(en_cfg_agent)
+  
+  function new(string name = "en_cfg_agent",uvm_component parent=null);
+    super.new(name,parent);
+  endfunction
+  
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    my_en_cfg_driver=en_cfg_driver::type_id::create("my_en_cfg_driver",this);
+    my_en_cfg_monitor=en_cfg_monitor::type_id::create("my_en_cfg_monitor",this);
+    en_cfg_sequencer_i=en_cfg_sequencer::type_id::create("en_cfg_sequencer_i",this);
+  endfunction
+  
+  virtual function void connect_phase(uvm_phase phase);
+    super.connect_phase(phase);
+    if(get_is_active())
+      my_en_cfg_driver.seq_item_port.connect(en_cfg_sequencer_i.seq_item_export);
+  endfunction
+endclass

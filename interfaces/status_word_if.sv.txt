@@ -1,0 +1,5 @@
+interface status_word_if(input rstn, input clk);
+  
+  logic [`STATUS_WIDTH-1:0] status_word;
+  
+endinterface

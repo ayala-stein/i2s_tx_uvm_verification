@@ -1,0 +1,16 @@
+class i2s_rx_agent extends uvm_agent;
+  
+  i2s_rx_monitor my_i2s_rx_monitor;
+  
+  `uvm_component_utils(i2s_rx_agent)
+  
+  function new(string name = "i2s_rx_agent",uvm_component parent=null);
+    super.new(name,parent);
+  endfunction
+  
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    my_i2s_rx_monitor=i2s_rx_monitor::type_id::create("my_i2s_rx_monitor",this);
+  endfunction
+  
+endclass

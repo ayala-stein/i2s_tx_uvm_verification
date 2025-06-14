@@ -1,0 +1,20 @@
+class pcm_seq_item extends uvm_sequence_item;
+  
+  rand bit [23:0]rx_data;
+  rand bit rx_ch;
+  rand integer num_clk_dly;
+  
+  `uvm_object_utils_begin(pcm_seq_item)
+  	`uvm_field_int(rx_data,UVM_DEFAULT)
+  	`uvm_field_int(rx_ch,UVM_DEFAULT)
+  	`uvm_field_int(num_clk_dly,UVM_DEFAULT)
+  `uvm_object_utils_end
+  
+  constraint num_clk_dly_wow{num_clk_dly==32;}
+  
+  
+  function new(string name = "pcm_seq_item");
+    super.new(name);
+  endfunction:new
+  
+endclass

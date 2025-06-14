@@ -1,0 +1,17 @@
+class i2s_rx_seq_item extends uvm_sequence_item;
+  
+  rand bit ws_o;
+  rand bit [`DATA_WIDTH-1:0] sd_o;
+  
+  `uvm_object_utils_begin(i2s_rx_seq_item)
+  	`uvm_field_int(ws_o,UVM_DEFAULT)
+  	`uvm_field_int(sd_o,UVM_DEFAULT)
+  `uvm_object_utils_end
+  
+  
+  function new(string name = "i2s_rx_seq_item");
+    super.new(name);
+  endfunction:new
+  
+endclass
+  

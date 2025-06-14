@@ -1,0 +1,40 @@
+class en_cfg_driver extends uvm_driver #(en_cfg_seq_item);
+  `uvm_component_utils(en_cfg_driver)
+  
+  virtual en_cfg_if en_cfg_if_i;
+  
+  function new(string name="en_cfg_driver", uvm_component parent=null);
+    super.new(name,parent);
+  endfunction
+  
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    if(!uvm_config_db#(virtual en_cfg_if)::get(this, "", "en_cfg_if_i", en_cfg_if_i))
+       `uvm_error("NO_VIF",{"virtual interface must be set for: ",get_full_name(),"en_cfg_if_i"});
+  endfunction
+  
+  task run_phase(uvm_phase phase);
+    en_cfg_if_i.en <=0 ;
+    en_cfg_if_i.cfg_stat_en <=0;
+    en_cfg_if_i.cfg_ch_single <= 0;
+    en_cfg_if_i.cfg_ch_sel <=0;
+	wait(en_cfg_if_i.rstn == 1);
+    forever begin
+      
+        
+    	seq_item_port.get_next_item(req);
+    	drive_data();
+    	seq_item_port.item_done();
+    end  
+  endtask
+  
+  task drive_data();
+    req.print();
+    en_cfg_if_i.en <= req.en;
+    en_cfg_if_i.cfg_stat_en <= req.cfg_stat_en;
+    en_cfg_if_i.cfg_ch_single <= req.cfg_ch_single;
+    en_cfg_if_i.cfg_ch_sel <= req.cfg_ch_sel;
+ endtask 
+endclass
+    
+  

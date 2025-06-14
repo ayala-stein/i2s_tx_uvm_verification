@@ -1,0 +1,57 @@
+import uvm_pkg::*;
+`include "i2s_tx_pkg.sv"
+module dig_top;
+  reg clk = 1; 
+  reg rstn = 1; 
+  
+  
+  always #50 clk = ~clk;
+ 
+  initial begin
+    clk = 1; 
+    rstn = 0; 
+    #100; 
+    rstn = 1; 
+  end
+  
+  status_word_if status_word_if_i(.clk(clk),.rstn(rstn));
+  pcm_if pcm_if_i(.clk(clk),.rstn(rstn)); 
+  en_cfg_if en_cfg_if_i(.clk(clk),.rstn(rstn));
+  i2s_rx_if i2s_rx_if_i(.clk(clk),.rstn(rstn));
+
+  I2S_TX i2s_tx_i(  
+    .clk(clk),
+    .rstn(rstn),
+    .en(en_cfg_if_i.en),
+    
+    .sd_o(i2s_rx_if_i.sd_o),
+    .sd_oe(i2s_rx_if_i.sd_oe),
+    .ws_o(i2s_rx_if_i.ws_o),
+    
+    .rx_data(pcm_if_i.rx_data),
+    .rx_valid(pcm_if_i.rx_valid),
+    .rx_ch(pcm_if_i.rx_ch),
+    
+    .rx_ready(pcm_if_i.rx_ready),
+    
+    .cfg_ch_single(en_cfg_if_i.cfg_ch_single),
+    .cfg_ch_sel(en_cfg_if_i.cfg_ch_sel),
+    .cfg_stat_en(en_cfg_if_i.cfg_stat_en),
+    .status_word(status_word_if_i.status_word)
+    
+  );
+  
+  initial begin
+    uvm_config_db#(virtual status_word_if)::set(null,"*","status_word_if_i",status_word_if_i);
+    uvm_config_db#(virtual en_cfg_if)::set(null,"*","en_cfg_if_i",en_cfg_if_i);
+    uvm_config_db#(virtual pcm_if)::set(null,"*","pcm_if_i",pcm_if_i);
+    uvm_config_db#(virtual i2s_rx_if)::set(null,"*","i2s_rx_if_i",i2s_rx_if_i);
+    $dumpvars(0, dig_top);
+  end
+  
+  initial begin
+    run_test("i2s_tx_test"); 
+  end
+  
+endmodule
+

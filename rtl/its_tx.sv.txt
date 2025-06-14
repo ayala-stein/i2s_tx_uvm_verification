@@ -1,0 +1,188 @@
+module I2S_TX #(
+  parameter DATA_WIDTH = 24,
+  parameter STATUS_WIDTH = 8
+)(
+  input clk,
+  input rstn,
+  input en,
+  
+  output reg sd_o,
+  output reg sd_oe,
+  output reg ws_o,
+  
+  input [DATA_WIDTH-1:0] rx_data,
+  input rx_valid,
+  input rx_ch,
+  
+  output reg rx_ready,
+  
+  input cfg_ch_single,
+  input cfg_ch_sel,
+  input cfg_stat_en,
+  input [STATUS_WIDTH-1:0] status_word 
+);
+  
+  reg [DATA_WIDTH-1:0] left;
+  reg [DATA_WIDTH-1:0] right;
+  reg [STATUS_WIDTH-1:0] status;
+  reg out_data;
+  reg ch;
+  reg [4:0] cnt_data;
+  reg [3:0] cnt_status;
+
+  
+  reg new_left;
+  reg new_right;
+  
+  // new left
+  always @ (posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      new_left <= 0;
+    end else if (rx_valid && rx_ready && ch == 0) begin
+      new_left <= 1;
+    end else if(cnt_data == DATA_WIDTH && ch == 0) begin
+      new_left <= 0;
+    end
+  end
+ 
+  //new right
+  always @ (posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      new_right <= 0;
+    end else if (rx_valid && rx_ready && ch == 1) begin
+      new_right <= 1;
+    end else if(cnt_data == DATA_WIDTH && ch == 1) begin
+      new_right <= 0;
+    end
+  end
+    
+  assign rx_ready = ~new_left || ~new_right; 
+    
+  // Save status
+  always @ (posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      status <= {STATUS_WIDTH{1'b0}};
+    end else if (en) begin
+      if (status != status_word) begin
+        if (cfg_stat_en) begin
+          status <= status_word;
+        end else begin
+          status <= {STATUS_WIDTH{1'b0}};
+        end
+      end
+    end
+  end
+  
+  // Save left data
+  always @ (posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      left <= {DATA_WIDTH{1'b0}};
+    end else if (en && rx_valid && rx_ready) begin       
+      if (rx_ch == 1'b0) begin
+        left <= rx_data;
+      end
+    end
+  end
+  
+  // Save right data
+  always @ (posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      right <= {DATA_WIDTH{1'b0}};
+    end else if (en && rx_valid && rx_ready) begin       
+      if (rx_ch == 1'b1) begin
+        right <= rx_data;       
+      end
+    end
+  end
+
+  // ch
+  always @ (posedge clk or negedge rstn) begin
+    
+    if (!rstn) begin
+      ch <= 1'b1;
+    end else if (cnt_status == STATUS_WIDTH) begin     
+      ch <= ~ch;       
+    end
+  end
+  
+  // cnt_data
+  always @ (posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      cnt_data <= 5'b00000;
+      @(posedge clk);
+    end else if (cnt_status == STATUS_WIDTH) begin  
+      @(posedge clk);
+      cnt_data <= 5'b00000;          
+    end else if (cnt_data < DATA_WIDTH) begin
+      cnt_data <= cnt_data + 1;
+    end     
+  end
+  
+  // cnt_status
+  always @ (posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      cnt_status <= 4'b0000;
+    end else if (cnt_status == STATUS_WIDTH) begin     
+      cnt_status <= 4'b0000;          
+    end else if (cnt_data == DATA_WIDTH && cnt_status < STATUS_WIDTH) begin
+      cnt_status <= cnt_status + 1;
+    end     
+  end
+  
+  // out_data
+  always @ (posedge clk or negedge rstn) begin   
+    if (!rstn) begin
+      out_data <= 1'b0;
+    end else if (cnt_data < DATA_WIDTH) begin
+      if (cfg_ch_single == 1'b0) begin
+        if (ch == 1'b0) begin
+          out_data <= left[DATA_WIDTH - cnt_data - 1];
+        end else begin
+          out_data <= right[DATA_WIDTH - cnt_data - 1];
+        end
+      end else if (cfg_ch_sel == ch) begin
+        if (ch == 1'b0) begin
+          out_data <= left[DATA_WIDTH - cnt_data - 1];
+        end else begin
+          out_data <= right[DATA_WIDTH - cnt_data - 1];
+        end
+      end
+    end else if (cfg_stat_en == 1'b1) begin
+      if (cfg_ch_single == 1'b0) begin
+        out_data <= status_word[STATUS_WIDTH - cnt_status - 1];
+      end else if (cfg_ch_sel == ch) begin
+        out_data <= status_word[STATUS_WIDTH - cnt_status - 1];
+      end
+    end
+  end
+  
+  // sd_oe
+  always @ (posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      sd_oe <= 1'b0;
+    end else if (en) begin
+      if (cnt_data < DATA_WIDTH) begin
+        if (cfg_ch_single == 1'b1) begin
+          if (cfg_ch_sel != ch) begin
+            sd_oe <= 1'b0;
+          end else begin
+            sd_oe <= 1'b1;
+          end
+        end else begin
+          sd_oe <= 1'b1;
+        end
+      end else begin
+        if (cfg_stat_en == 1'b1) begin
+          sd_oe <= 1'b1;
+        end else begin
+          sd_oe <= 1'b0;
+        end
+      end
+    end
+  end
+
+  assign sd_o = out_data;
+  assign ws_o = ch;
+    
+endmodule
+

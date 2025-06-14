@@ -1,0 +1,2 @@
+`define DATA_WIDTH 24
+`define STATUS_WIDTH 8

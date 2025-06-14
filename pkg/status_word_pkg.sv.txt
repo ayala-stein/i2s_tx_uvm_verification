@@ -1,0 +1,9 @@
+`include "uvm_macros.svh"
+`include "status_word_if.sv"
+`include "status_word_seq_item.sv"
+`include "status_word_sequencer.sv"
+//   `include "i2c_master_coverage.sv"
+`include "status_word_monitor.sv"
+`include "status_word_driver.sv"
+`include "status_word_agent.sv"
+

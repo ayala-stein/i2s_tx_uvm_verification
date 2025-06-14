@@ -1,0 +1,26 @@
+// `include "pcm_pkg.sv"
+class pcm_agent extends uvm_agent;
+  
+  pcm_driver my_pcm_driver;
+  pcm_monitor my_pcm_monitor;
+  pcm_sequencer pcm_sequencer_i;
+  
+  `uvm_component_utils(pcm_agent)
+  
+  function new(string name = "pcm_agent",uvm_component parent=null);
+    super.new(name,parent);
+  endfunction
+  
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    my_pcm_driver=pcm_driver::type_id::create("my_pcm_driver",this);
+    my_pcm_monitor=pcm_monitor::type_id::create("my_pcm_monitor",this);
+    pcm_sequencer_i=pcm_sequencer::type_id::create("pcm_sequencer_i",this);
+  endfunction
+  
+  virtual function void connect_phase(uvm_phase phase);
+    super.connect_phase(phase);
+    if(get_is_active())
+      my_pcm_driver.seq_item_port.connect(pcm_sequencer_i.seq_item_export);
+  endfunction
+endclass

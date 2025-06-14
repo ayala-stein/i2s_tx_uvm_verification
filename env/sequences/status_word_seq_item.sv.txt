@@ -1,0 +1,18 @@
+class status_word_seq_item extends uvm_sequence_item;
+  
+  rand bit [`STATUS_WIDTH-1:0] status_word;
+  rand bit [3:0] num_clk_dly;
+  
+  `uvm_object_utils_begin(status_word_seq_item)
+  	`uvm_field_int(status_word,UVM_DEFAULT)
+  	`uvm_field_int(num_clk_dly,UVM_DEFAULT)
+  `uvm_object_utils_end
+  
+  
+  
+  function new(string name = "status_word_seq_item");
+    super.new(name);
+  endfunction:new
+  
+endclass
+  

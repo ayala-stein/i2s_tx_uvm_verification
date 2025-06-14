@@ -1,0 +1,35 @@
+
+
+class i2s_tx_env extends uvm_env;
+  
+  `uvm_component_utils(i2s_tx_env);
+ 
+  i2s_tx_scoreboard i2s_tx_scoreboard_i;
+  status_word_agent status_word_agent_i;
+  pcm_agent pcm_agent_i;
+  en_cfg_agent en_cfg_agent_i;
+  i2s_rx_agent i2s_rx_agent_i;
+   
+  function new(string name ="i2s_tx_env", uvm_component parent = null);
+    super.new(name, parent);
+  endfunction 
+ 
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+   
+    i2s_tx_scoreboard_i = i2s_tx_scoreboard::type_id::create("i2s_tx_scoreboard_i", this);
+    status_word_agent_i = status_word_agent::type_id::create("status_word_agent_i", this);
+    pcm_agent_i = pcm_agent::type_id::create("pcm_agent_i", this);
+    en_cfg_agent_i = en_cfg_agent::type_id::create("en_cfg_agent_i", this);
+    i2s_rx_agent_i = i2s_rx_agent::type_id::create("i2s_rx_agent_i", this);
+  endfunction 
+  
+  function void connect_phase(uvm_phase phase);
+    super.connect_phase(phase);
+    pcm_agent_i.my_pcm_monitor.item_collected_port_in.connect(i2s_tx_scoreboard_i.expected_data);
+    i2s_rx_agent_i.my_i2s_rx_monitor.item_collected_port_in.connect(i2s_tx_scoreboard_i.actual_data);
+
+  endfunction: connect_phase
+
+endclass
+

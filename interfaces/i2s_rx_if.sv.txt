@@ -1,0 +1,7 @@
+interface i2s_rx_if(input rstn, input clk);
+
+  logic sd_o;
+  logic sd_oe;
+  logic ws_o;
+  
+endinterface

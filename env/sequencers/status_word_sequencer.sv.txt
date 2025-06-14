@@ -1,0 +1,9 @@
+class status_word_sequencer extends uvm_sequencer#(status_word_seq_item);
+ 
+  `uvm_component_utils(status_word_sequencer);
+
+  
+  function new(string name = "status_word_sequencer", uvm_component parent=null);
+    super.new(name,parent);
+  endfunction
+endclass

@@ -1,0 +1,45 @@
+class status_word_driver extends uvm_driver #(status_word_seq_item);
+ 
+  `uvm_component_utils(status_word_driver);
+  
+
+  virtual status_word_if status_word_if_i;
+ 
+
+
+  function new (string name = "status_word_driver", uvm_component parent= null);
+    super.new(name, parent);
+  endfunction 
+
+
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+
+    if(!uvm_config_db#(virtual status_word_if)::get(this, "", "status_word_if_i", status_word_if_i))
+       `uvm_error("NO_VIF",{"virtual interface must be set for: ",get_full_name(),"status_word_if_i"});
+  endfunction
+  
+
+ task run_phase(uvm_phase phase);
+   status_word_if_i.status_word<=0;
+   
+    forever begin
+      wait(status_word_if_i.rstn == 1);
+    seq_item_port.get_next_item(req);
+    drive_data();
+    seq_item_port.item_done();
+    end
+ endtask 
+ 
+
+ task drive_data();
+
+   req.print();
+
+  status_word_if_i.status_word <= req.status_word;
+   
+  repeat(req.num_clk_dly) @(posedge status_word_if_i.clk);
+ endtask 
+  
+ 
+endclass

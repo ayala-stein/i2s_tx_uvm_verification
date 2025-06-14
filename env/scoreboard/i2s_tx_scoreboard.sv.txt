@@ -1,0 +1,47 @@
+class i2s_tx_scoreboard extends uvm_scoreboard;
+
+  `uvm_component_utils(i2s_tx_scoreboard)
+    
+  `uvm_analysis_imp_decl(_actual)
+  `uvm_analysis_imp_decl(_expected)
+  
+  uvm_analysis_imp_actual #(i2s_rx_seq_item, i2s_tx_scoreboard) actual_data;
+  uvm_analysis_imp_expected #(pcm_seq_item, i2s_tx_scoreboard) expected_data;
+  
+  uvm_tlm_analysis_fifo #(i2s_rx_seq_item) rx_fifo;
+  uvm_tlm_analysis_fifo #(pcm_seq_item) pcm_fifo;
+
+  function new(string name, uvm_component parent);
+    super.new(name, parent);
+    actual_data = new("actual_data", this);
+    expected_data = new("expected_data", this);
+  endfunction
+
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    rx_fifo = new("rx_fifo", this);
+    pcm_fifo = new("pcm_fifo", this);
+  endfunction
+  
+  function void write_expected(pcm_seq_item item);
+    pcm_fifo.write(item);
+    compare_results(item);
+  endfunction
+  
+  function void write_actual(i2s_rx_seq_item item);
+    rx_fifo.write(item);
+  endfunction
+  
+  function void compare_results(pcm_seq_item expected_item);
+    i2s_rx_seq_item actual_item;
+    if (pcm_fifo.try_get(expected_item) && rx_fifo.try_get(actual_item)) begin
+      if (expected_item.rx_data != actual_item.sd_o) begin
+        `uvm_error("RESULT_MISMATCH", $sformatf("Expected: %0d, Actual: %0d", expected_item.rx_data, actual_item.sd_o))
+      end else begin
+        `uvm_info("RESULT_MATCH", $sformatf("Expected: %0d, Actual: %0d", expected_item.rx_data, actual_item.sd_o), UVM_LOW)
+      end
+    end
+  endfunction
+  
+endclass
+

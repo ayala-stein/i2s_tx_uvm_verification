@@ -1,0 +1,7 @@
+`include "uvm_macros.svh"
+`include "i2s_rx_if.sv"
+`include "i2s_rx_seq_item.sv"
+//   `include "i2c_master_coverage.sv"
+`include "i2s_rx_monitor.sv"
+`include "i2s_rx_agent.sv"
+

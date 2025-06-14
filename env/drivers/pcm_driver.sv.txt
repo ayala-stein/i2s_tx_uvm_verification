@@ -1,0 +1,51 @@
+class pcm_driver extends uvm_driver #(pcm_seq_item);
+ 
+  `uvm_component_utils(pcm_driver);
+  
+  virtual pcm_if pcm_if_i;
+  
+  
+ 
+  function new (string name = "pcm_driver", uvm_component parent= null);
+    super.new(name, parent);
+  endfunction 
+
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+
+   if(!uvm_config_db#(virtual pcm_if)::get(this, "", "pcm_if_i", pcm_if_i))
+       `uvm_error("NO_VIF",{"virtual interface must be set for: ",get_full_name(),"pcm_if_i"});
+  endfunction
+  
+ task run_phase(uvm_phase phase);
+    pcm_if_i.rx_data<= 0;
+  pcm_if_i.rx_valid <= 0;
+  pcm_if_i.rx_ch <=0;
+   
+    forever begin
+      wait(pcm_if_i.rstn == 1);
+    seq_item_port.get_next_item(req);
+    drive_data();
+    seq_item_port.item_done();
+    end
+ endtask 
+ 
+
+ task drive_data();
+@(posedge pcm_if_i.clk);
+  req.print();
+  pcm_if_i.rx_data <= req.rx_data;
+  pcm_if_i.rx_valid <= 1;
+  pcm_if_i.rx_ch <= req.rx_ch;
+   wait(pcm_if_i.rx_ready==1);
+   @(posedge pcm_if_i.clk);
+     pcm_if_i.rx_data <= 0;
+  pcm_if_i.rx_valid <= 0;
+  pcm_if_i.rx_ch <= 0;
+
+   
+   repeat(req.num_clk_dly-2) @(posedge pcm_if_i.clk);
+ endtask 
+  
+ 
+endclass

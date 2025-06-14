@@ -1,0 +1,154 @@
+typedef class i2s_tx_env;
+  class status_word_sequence extends uvm_sequence#(status_word_seq_item);
+    
+    `uvm_object_utils(status_word_sequence)
+    
+    function new(string name = "status_word_sequence");
+      super.new(name);
+    endfunction
+
+    task pre_body();
+      if(starting_phase != null)
+        starting_phase.raise_objection(this);
+    endtask
+    
+   task body();
+     req = status_word_seq_item::type_id::create("req");
+       `uvm_do(req);
+     `uvm_info(get_type_name(),$sformatf("status_word"), UVM_NONE)
+    endtask
+    
+    task post_body();
+      if(starting_phase != null)
+        starting_phase.drop_objection(this);
+    endtask
+
+  endclass
+  
+  //========================================================================
+
+  //=============================================
+  
+    class pcm_sequence extends uvm_sequence#(pcm_seq_item);
+    
+    `uvm_object_utils(pcm_sequence);
+    rand bit last_ch;
+
+    function new(string name = "pcm_sequence");
+      super.new(name);
+      last_ch <= $random % 2;
+    endfunction
+
+    task pre_body();
+      if(starting_phase != null)
+        starting_phase.raise_objection(this);
+    endtask
+    
+   task body();
+     req = pcm_seq_item::type_id::create("req");
+     `uvm_do_with(req,{req.rx_ch!=last_ch;})
+     `uvm_info(get_type_name(),$sformatf("pcm"), UVM_NONE)
+
+     last_ch <= req.rx_ch;
+    endtask
+    
+    task post_body();
+      if(starting_phase != null)
+        starting_phase.drop_objection(this);
+    endtask
+
+
+  endclass 
+  
+  //====================================================
+  
+   class en_cfg_sequence extends uvm_sequence#(en_cfg_seq_item);
+    
+    `uvm_object_utils(en_cfg_sequence);
+    
+
+    function new(string name = "en_cfg_sequence");
+      super.new(name);
+    endfunction
+
+    task pre_body();
+      if(starting_phase != null)
+        starting_phase.raise_objection(this);
+    endtask
+    
+   task body();
+     req = en_cfg_seq_item::type_id::create("req");
+     `uvm_do_with(req, {en==1; cfg_stat_en==0; cfg_ch_single==0;});
+     `uvm_info(get_type_name(),$sformatf("en_cfg"), UVM_NONE)
+
+    endtask
+    
+    task post_body();
+      if(starting_phase != null)
+        starting_phase.drop_objection(this);
+    endtask
+
+
+  endclass 
+  
+  //=================================
+  
+
+  //===================================
+  
+    
+
+  //=========================================
+  
+
+//   =========================================================================
+    class i2s_tx_virtual_sequence extends uvm_sequence;
+    
+  i2s_tx_env i2s_tx_env_i;
+    
+  status_word_sequence status_word_sequence_i;
+  pcm_sequence pcm_sequence_i;
+  en_cfg_sequence en_cfg_sequence_i;  
+    
+    `uvm_object_utils(i2s_tx_virtual_sequence);
+    
+
+    function new(string name = "i2s_tx_virtual_sequence");
+      super.new(name);
+    endfunction
+    
+    function void set_env(i2s_tx_env i2s_tx_env_i);
+      this.i2s_tx_env_i = i2s_tx_env_i;
+    endfunction
+
+    task pre_body();
+      if(starting_phase != null)
+        starting_phase.raise_objection(this);
+      status_word_sequence_i= status_word_sequence::type_id::create("status_word_sequence_i");
+      pcm_sequence_i= pcm_sequence::type_id::create("pcm_sequence_i");
+      en_cfg_sequence_i= en_cfg_sequence::type_id::create("en_cfg_sequence_i");
+      
+    endtask
+    
+   task body();
+    
+     `uvm_info(get_type_name(),"Starting my virtual sequence", UVM_NONE) 
+     
+     en_cfg_sequence_i.start(i2s_tx_env_i.en_cfg_agent_i.en_cfg_sequencer_i);
+     fork
+     status_word_sequence_i.start(i2s_tx_env_i.status_word_agent_i.status_word_sequencer_i);
+     pcm_sequence_i.start(i2s_tx_env_i.pcm_agent_i.pcm_sequencer_i);
+     join
+      
+     
+    endtask
+    
+    task post_body();
+      if(starting_phase != null)
+        starting_phase.drop_objection(this);
+    endtask
+
+
+  endclass
+  
+  

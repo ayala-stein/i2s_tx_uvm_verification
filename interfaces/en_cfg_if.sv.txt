@@ -1,0 +1,8 @@
+interface en_cfg_if(input rstn, input clk);
+  
+  logic en;
+  logic cfg_stat_en;
+  logic cfg_ch_single;
+  logic cfg_ch_sel;
+  
+endinterface

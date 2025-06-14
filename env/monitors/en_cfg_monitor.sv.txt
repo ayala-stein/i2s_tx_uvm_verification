@@ -1,0 +1,48 @@
+class en_cfg_monitor extends uvm_monitor;
+  `uvm_component_utils(en_cfg_monitor);
+  
+  virtual en_cfg_if en_cfg_if_i;
+  
+  uvm_analysis_port #(en_cfg_seq_item) item_collected_port_in;
+
+  en_cfg_seq_item temp_trans_collected;
+  
+  function new(string name="en_cfg_monitor", uvm_component parent);
+    super.new(name, parent);
+    item_collected_port_in=new("item_collected_port_in", this);
+  endfunction
+  
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    if(!uvm_config_db#(virtual en_cfg_if)::get(this, "", "en_cfg_if_i", en_cfg_if_i))
+      `uvm_fatal("NO_VIF",{"virtual interface must be set for: ",get_full_name(),"en_cfg_if_i"});
+  endfunction
+  
+  task run_phase(uvm_phase phase);
+    temp_trans_collected=en_cfg_seq_item::type_id::create("temp_trans_collected", this);
+    
+    forever begin
+      @(negedge en_cfg_if_i.clk);
+      if (en_cfg_if_i.rstn != 0)
+        begin
+          data_in(en_cfg_if_i.en, en_cfg_if_i.cfg_stat_en, en_cfg_if_i.cfg_ch_single, en_cfg_if_i.cfg_ch_sel);
+        end
+    end
+  endtask
+  
+  task data_in (en, cfg_stat_en, cfg_ch_single, cfg_ch_sel);
+    forever begin 
+      @(posedge en_cfg_if_i.clk)
+      if (en_cfg_if_i.rstn == 0) begin
+          temp_trans_collected.en = en_cfg_if_i.en;
+          temp_trans_collected.cfg_stat_en = en_cfg_if_i.cfg_stat_en;
+          temp_trans_collected.cfg_ch_single = en_cfg_if_i.cfg_ch_single;
+          temp_trans_collected.cfg_ch_sel = en_cfg_if_i.cfg_ch_sel;
+    
+          item_collected_port_in.write(temp_trans_collected);
+      end
+    end
+  endtask
+endclass
+    
+    

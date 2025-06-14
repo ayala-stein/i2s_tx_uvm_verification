@@ -1,0 +1,9 @@
+`include "uvm_macros.svh"
+`include "en_cfg_if.sv"
+`include "en_cfg_seq_item.sv"
+`include "en_cfg_sequencer.sv"
+//   `include "i2c_master_coverage.sv"
+`include "en_cfg_monitor.sv"
+`include "en_cfg_driver.sv"
+`include "en_cfg_agent.sv"
+

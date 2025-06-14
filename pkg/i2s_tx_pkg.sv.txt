@@ -1,0 +1,11 @@
+`include "uvm_macros.svh"
+`include "types.sv"
+
+`include "status_word_pkg.sv"
+`include "pcm_pkg.sv"
+`include "en_cfg_pkg.sv"
+`include "i2s_rx_pkg.sv"
+`include "i2s_tx_seq_lib.sv"
+`include "i2s_tx_scoreboard.sv"
+`include "i2s_tx_env.sv"
+`include "i2s_tx_test.sv"
